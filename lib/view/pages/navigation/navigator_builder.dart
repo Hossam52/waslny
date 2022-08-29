@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:user_app/cubit/drivers_cubit/drivers_cubit.dart';
 import 'package:user_app/cubit/google_map/google_map_cubit.dart';
 import 'package:user_app/data/models/address_model.dart';
 import 'package:user_app/utils/const_manager.dart';
+import 'package:user_app/utils/methods.dart';
 import 'package:user_app/utils/value_manager.dart';
+import 'package:user_app/view/pages/search_address/search_address_page.dart';
 import 'package:user_app/view/routes/route.dart';
 
 import '../../../utils/color_manager.dart';
@@ -53,51 +57,68 @@ class _NavigatorBuilderState extends State<NavigatorBuilder> {
       builder: (context, state) {
         GoogleMapCubit googleMapCubit = GoogleMapCubit.get(context);
         // String? droppOff = googleMapCubit.pickedPrediction;
-        return Container(
-          padding: const EdgeInsets.all(AppPadding.p10),
-          height: AppSize.s50,
-          width: MediaQuery.of(context).size.width/1.5,
-          decoration: BoxDecoration(
-            color: ColorManager.offWhite,
-            borderRadius: BorderRadius.circular(AppSize.s10),
-            boxShadow: const [
-              BoxShadow(
-                offset: Offset(0, 4),
-                blurRadius: 5,
-                spreadRadius: 1,
-                color: Colors.black26,
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.circle, color: Colors.black,size: AppSize.s10,),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Text(
-                    //   ConstentManager.dropOff,
-                    //   style: Theme.of(context).textTheme.bodyMedium,
-                    // ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(
-                            context, Routes.searchAddressPage);
-                      },
-                      child: Text(
+        return GestureDetector(
+          onTap: () {
+            navigateTo(
+                context,
+                MultiBlocProvider(
+                  providers: [
+                    BlocProvider.value(
+                      value: GoogleMapCubit.get(context),
+                    ),
+                    BlocProvider.value(
+                      value: DriversCubit.instance(context),
+                    ),
+                  ],
+                  child: SearchAddressPage(),
+                ));
+            // Navigator.pushNamed(context, Routes.searchAddressPage,
+            //     arguments: GoogleMapCubit.get(context));
+          },
+          child: Container(
+            padding: const EdgeInsets.all(AppPadding.p10),
+            height: AppSize.s50,
+            width: MediaQuery.of(context).size.width / 1.5,
+            decoration: BoxDecoration(
+              color: ColorManager.offWhite,
+              borderRadius: BorderRadius.circular(AppSize.s10),
+              boxShadow: const [
+                BoxShadow(
+                  offset: Offset(0, 4),
+                  blurRadius: 5,
+                  spreadRadius: 1,
+                  color: Colors.black26,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.circle,
+                  color: Colors.black,
+                  size: AppSize.s10,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Text(
+                      //   ConstentManager.dropOff,
+                      //   style: Theme.of(context).textTheme.bodyMedium,
+                      // ),
+                      Text(
                         googleMapCubit.updatedDropOffLocation ??
                             ConstentManager.selectDropoffLocation,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                    ),
-                  ],
-                ),
-              )
-            ],
+                    ],
+                  ),
+                )
+              ],
+            ),
           ),
         );
       },

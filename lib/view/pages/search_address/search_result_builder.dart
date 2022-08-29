@@ -17,6 +17,9 @@ class SearchResultBuilder extends StatelessWidget {
       builder: (context, state) {
         final googleMapCubit = GoogleMapCubit.get(context);
         final predictions = googleMapCubit.predictions;
+        if (state is LoadingSearchState) {
+          return const Center(child: CircularProgressIndicator.adaptive());
+        }
         if (predictions != null) {
           return ListView.separated(
             shrinkWrap: true,
@@ -38,7 +41,7 @@ class SearchResultBuilder extends StatelessWidget {
                           Icons.add_location,
                           color: ColorManager.yellow,
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 3,
                         ),
                         Expanded(
@@ -47,16 +50,16 @@ class SearchResultBuilder extends StatelessWidget {
                             children: [
                               Text(
                                 "${predictions.predictions![index].structuredFormatting!.mainText}",
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 16,
                                 ),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 3,
                               ),
                               Text(
                                 "${predictions.predictions![index].structuredFormatting!.secondaryText}",
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 16,
                                 ),
                               ),
@@ -69,7 +72,7 @@ class SearchResultBuilder extends StatelessWidget {
             },
           );
         } else {
-          return Center(
+          return const Center(
             child: Text("Detect Your Destination"),
           );
         }

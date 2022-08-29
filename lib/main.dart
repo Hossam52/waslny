@@ -6,6 +6,7 @@ import 'package:user_app/cubit/drivers_cubit/drivers_cubit.dart';
 import 'package:user_app/cubit/google_map/google_map_cubit.dart';
 import 'package:user_app/cubit/login_cubit/login_cubit.dart';
 import 'package:user_app/cubit/register/register_cubit_cubit.dart';
+import 'package:user_app/view/pages/splashScreen.dart';
 import 'core/dioHelper.dart';
 import 'data/services/localDataLayer.dart';
 import 'utils/app_theme.dart';
@@ -36,12 +37,6 @@ class MyApp extends StatelessWidget {
           create: (context) => AppCubit(),
         ),
         BlocProvider(
-          create: (context) => GoogleMapCubit(),
-        ),
-        BlocProvider(
-          create: (context) => DriversCubit(),
-        ),
-        BlocProvider(
           create: (context) => LoginCubit(),
         ),
         BlocProvider(
@@ -52,7 +47,8 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: getAppTheme(),
         // initialRoute: historyPage,
-        onGenerateRoute: AppRoute.generateRoute,
+        // onGenerateRoute: AppRoute.generateRoute,
+        home: SplashScreen(),
       ),
     );
   }

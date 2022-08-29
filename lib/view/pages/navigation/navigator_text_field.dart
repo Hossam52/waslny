@@ -45,10 +45,10 @@ class NavigatorTextFeild extends StatelessWidget {
         validator: validate,
         obscureText: isvisiable ?? false,
         onFieldSubmitted: onSubmite,
-        onTap: suffixpressed,
         decoration: InputDecoration(
           suffixIcon: suffix != null && controller!.text.isNotEmpty
               ? GestureDetector(
+                  onTap: suffixpressed,
                   child: Icon(suffix),
                 )
               : null,

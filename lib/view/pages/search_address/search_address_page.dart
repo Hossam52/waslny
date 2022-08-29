@@ -21,7 +21,14 @@ class SearchAddressPage extends StatefulWidget {
 }
 
 class _SearchAddressPageState extends State<SearchAddressPage> {
-  late List<Prediction> prediction;
+  @override
+  void initState() {
+    final mapCubit = GoogleMapCubit.get(context);
+    mapCubit.searchPlaceCubit(mapCubit.isPickupLocationLastFocused
+        ? mapCubit.pickUpController.text
+        : mapCubit.destinationController.text);
+    super.initState();
+  }
 
   Widget lodingBuilder() {
     return const Center(

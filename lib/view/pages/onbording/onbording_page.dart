@@ -6,6 +6,8 @@ import 'package:user_app/data/models/onbording_model.dart';
 
 import 'package:user_app/utils/color_manager.dart';
 import 'package:user_app/utils/const_manager.dart';
+import 'package:user_app/utils/methods.dart';
+import 'package:user_app/view/pages/login/login_page.dart';
 import 'package:user_app/view/routes/route.dart';
 import 'package:user_app/view/wigdets/text_button.dart';
 
@@ -60,7 +62,8 @@ class _OnbordingPageState extends State<OnbordingPage> {
                             DefualtTextButton(
                               ontap: () {
                                 // cubit.getLocation();
-                                Navigator.pushNamed(context, Routes.loginPage);
+                                // Navigator.pushNamed(context, Routes.loginPage);
+                                navigateTo(context, LoginPage());
                               },
                               buttonText: ConstentManager.skipToApp,
                               borderColor: ColorManager.yellow,
@@ -73,7 +76,8 @@ class _OnbordingPageState extends State<OnbordingPage> {
                           children: [
                             DefualtTextButton(
                               ontap: () {
-                                Navigator.pushNamed(context, Routes.loginPage);
+                                // Navigator.pushNamed(context, Routes.loginPage);
+                                navigateTo(context, LoginPage());
                               },
                               buttonText: ConstentManager.useMyLocation,
                               borderColor: ColorManager.yellow,

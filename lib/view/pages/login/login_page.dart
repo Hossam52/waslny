@@ -4,7 +4,10 @@ import 'package:user_app/cubit/login_cubit/login_cubit.dart';
 import 'package:user_app/utils/assets_manager.dart';
 import 'package:user_app/utils/color_manager.dart';
 import 'package:user_app/utils/const_manager.dart';
+import 'package:user_app/utils/methods.dart';
 import 'package:user_app/utils/value_manager.dart';
+import 'package:user_app/view/pages/home/home_page.dart';
+import 'package:user_app/view/pages/registration/registration_page.dart';
 import 'package:user_app/view/routes/route.dart';
 import 'package:user_app/view/wigdets/text_button.dart';
 import 'package:user_app/view/wigdets/text_feild.dart';
@@ -31,7 +34,8 @@ class _LoginPageState extends State<LoginPage> {
     return BlocConsumer<LoginCubit, LoginState>(
       listener: (context, state) {
         state is SuccessLoginState
-            ? Navigator.pushNamed(context, Routes.homePage)
+            ? navigateTo(context, HomePage())
+            //  Navigator.pushNamed(context, Routes.homePage)
             : null;
         state is ErrorLoginState
             ? _scaffoldKey.currentState?.showSnackBar(
@@ -157,8 +161,9 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       TextButton(
                           onPressed: () {
-                            Navigator.pushNamed(
-                                context, Routes.registrationPage);
+                            navigateTo(context, RegistrationPage());
+                            // Navigator.pushNamed(
+                            //     context, Routes.registrationPage);
                           },
                           child: Text(
                             ConstentManager.signUp,

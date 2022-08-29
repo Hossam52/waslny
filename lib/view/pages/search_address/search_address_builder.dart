@@ -50,15 +50,13 @@ class _NavigatorTextBuilderState extends State<NavigatorTextBuilder> {
   Future<void> getDrivers(BuildContext context) async {
     final googleMapCubit = GoogleMapCubit.get(context);
     await googleMapCubit.getDirectionDetails(context);
+    FocusScope.of(context).unfocus();
+    Navigator.pop(context);
   }
 
   void setPickupLocation(BuildContext context) {
     final googleMapCubit = GoogleMapCubit.get(context);
     googleMapCubit.setPickupLocation();
-    googleMapCubit.pickUpController.text = googleMapCubit
-            .locationDetailsPickup?.result?.formattedAddress
-            ?.toString() ??
-        '';
     googleMapCubit.changeLastFocused(false);
     FocusScope.of(context).requestFocus(focusedDestination);
   }
@@ -66,13 +64,7 @@ class _NavigatorTextBuilderState extends State<NavigatorTextBuilder> {
   void setDistnationLocation(BuildContext context) async {
     final googleMapCubit = GoogleMapCubit.get(context);
     googleMapCubit.setDestinationLocation();
-    googleMapCubit.destinationController.text = googleMapCubit
-            .locationDetailsDestination?.result?.formattedAddress
-            ?.toString() ??
-        '';
     await getDrivers(context);
-    FocusScope.of(context).unfocus();
-    Navigator.pop(context);
   }
 
   @override
@@ -103,61 +95,95 @@ class _NavigatorTextBuilderState extends State<NavigatorTextBuilder> {
             color: ColorManager.offWhite,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.gps_fixed,
-                    color: ColorManager.yellow,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: NavigatorTextFeild(
-                      focusNode: focusedFrom,
-                      controller: GoogleMapCubit.get(context).pickUpController,
-                      onSubmite: (value) {
-                        GoogleMapCubit.get(context).searchPlaceCubit(value!);
-                      },
-                      onChange: (val) {
-                        GoogleMapCubit.get(context).changeLastFocused(true);
-                      },
-                      label: googleMapCubit.locationDetailsPickup?.result
-                              ?.formattedAddress ??
-                          "${GoogleMapCubit.get(context).placeMark?[0].country},${GoogleMapCubit.get(context).placeMark?[0].street}",
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.gps_fixed,
+                          color: ColorManager.yellow,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: NavigatorTextFeild(
+                            focusNode: focusedFrom,
+                            controller:
+                                GoogleMapCubit.get(context).pickUpController,
+                            suffix: Icons.close,
+                            suffixpressed: () {
+                              GoogleMapCubit.get(context)
+                                  .pickUpController
+                                  .clear();
+                            },
+                            onChange: (val) {
+                              GoogleMapCubit.get(context).searchPlaceCubit(val);
+
+                              GoogleMapCubit.get(context)
+                                  .changeLastFocused(true);
+                            },
+                            label: googleMapCubit.locationDetailsPickup?.result
+                                    ?.formattedAddress ??
+                                "${GoogleMapCubit.get(context).placeMark?[0].country},${GoogleMapCubit.get(context).placeMark?[0].street}",
+                          ),
+                        )
+                      ],
                     ),
-                  )
-                ],
-              ),
-              const Divider(
-                thickness: 2,
-                indent: 30,
-              ),
-              Row(
-                children: [
-                  const Icon(Icons.fmd_good, color: Colors.red),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: NavigatorTextFeild(
-                      focusNode: focusedDestination,
-                      onSubmite: (value) {
-                        GoogleMapCubit.get(context).searchPlaceCubit(value!);
-                      },
-                      suffix: Icons.close,
-                      onChange: (val) {
-                        GoogleMapCubit.get(context).changeLastFocused(false);
-                      },
-                      controller:
-                          GoogleMapCubit.get(context).destinationController,
-                      label: googleMapCubit.locationDetailsDestination?.result
-                              ?.formattedAddress ??
-                          "To",
+                    const Divider(
+                      thickness: 2,
+                      indent: 30,
                     ),
-                  )
-                ],
+                    Row(
+                      children: [
+                        const Icon(Icons.fmd_good, color: Colors.red),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: NavigatorTextFeild(
+                            focusNode: focusedDestination,
+                            onSubmite: (value) async {
+                              if (googleMapCubit
+                                  .destinationController.text.isNotEmpty) {
+                                await getDrivers(context);
+                              }
+                            },
+                            suffix: Icons.close,
+                            suffixpressed: () {
+                              GoogleMapCubit.get(context)
+                                  .destinationController
+                                  .clear();
+                            },
+                            onChange: (val) {
+                              GoogleMapCubit.get(context).searchPlaceCubit(val);
+
+                              GoogleMapCubit.get(context)
+                                  .changeLastFocused(false);
+                            },
+                            controller: GoogleMapCubit.get(context)
+                                .destinationController,
+                            label: googleMapCubit.locationDetailsDestination
+                                    ?.result?.formattedAddress ??
+                                "To",
+                          ),
+                        )
+                      ],
+                    ),
+                  ],
+                ),
               ),
+              InkWell(
+                onTap: () {
+                  googleMapCubit.swapLocations();
+                },
+                child: Icon(
+                  Icons.swap_vert,
+                  size: 30,
+                  color: ColorManager.gray,
+                ),
+              )
             ],
           ),
         );

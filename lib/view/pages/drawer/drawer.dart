@@ -6,7 +6,10 @@ import 'package:user_app/data/models/profile_data_model.dart';
 import 'package:user_app/data/models/user_login.dart';
 import 'package:user_app/utils/color_manager.dart';
 import 'package:user_app/utils/const_manager.dart';
+import 'package:user_app/utils/methods.dart';
 import 'package:user_app/utils/value_manager.dart';
+import 'package:user_app/view/pages/login/login_page.dart';
+import 'package:user_app/view/pages/user_profile/user_profile_page.dart';
 import 'package:user_app/view/pages/user_profile/user_profile_pic.dart';
 import 'package:user_app/view/routes/route.dart';
 import '../../../data/services/localDataLayer.dart';
@@ -60,7 +63,8 @@ class _DrawerMenueState extends State<DrawerMenue> {
             children: [
               GestureDetector(
                 onTap: () {
-                  Navigator.pushNamed(context, Routes.userProfilePage);
+                  navigateTo(context, UserProfilePage());
+                  // Navigator.pushNamed(context, Routes.userProfilePage);
                 },
                 child: Container(
                   child: Column(
@@ -155,48 +159,43 @@ class _DrawerMenueState extends State<DrawerMenue> {
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      child: Column(
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: ColorManager.yellow,
-            ),
-            child: drawerheaderBuild(),
+    return Column(
+      children: [
+        DrawerHeader(
+          decoration: BoxDecoration(
+            color: ColorManager.yellow.withOpacity(0.9),
           ),
-          // DrawerTile(
-          //     text: ConstentManager.home,
-          //     icon: Icons.home,
-          //     onPress: () {
-          //       Navigator.pop(context);
-          //       Navigator.pushReplacementNamed(context, Routes.homePage);
-          //     }),
-          DrawerTile(
-              text: ConstentManager.paymet,
-              icon: Icons.payment,
-              onPress: () {}),
-          DrawerTile(
-              text: ConstentManager.history,
-              icon: Icons.history,
-              onPress: () {}),
-          DrawerTile(
-              text: ConstentManager.notification,
-              icon: Icons.notifications,
-              onPress: () {}),
-          DrawerTile(
-              text: ConstentManager.termsConsditions,
-              icon: Icons.settings,
-              onPress: () {}),
-          DrawerTile(
-            text: ConstentManager.logout,
-            icon: Icons.logout,
-            onPress: () {
-              Shared.prefClear();
-              Navigator.pushReplacementNamed(context, Routes.loginPage);
-            },
-          ),
-        ],
-      ),
+          child: drawerheaderBuild(),
+        ),
+        // DrawerTile(
+        //     text: ConstentManager.home,
+        //     icon: Icons.home,
+        //     onPress: () {
+        //       Navigator.pop(context);
+        //       Navigator.pushReplacementNamed(context, Routes.homePage);
+        //     }),
+        DrawerTile(
+            text: ConstentManager.paymet, icon: Icons.payment, onPress: () {}),
+        DrawerTile(
+            text: ConstentManager.history, icon: Icons.history, onPress: () {}),
+        DrawerTile(
+            text: ConstentManager.notification,
+            icon: Icons.notifications,
+            onPress: () {}),
+        DrawerTile(
+            text: ConstentManager.termsConsditions,
+            icon: Icons.settings,
+            onPress: () {}),
+        DrawerTile(
+          text: ConstentManager.logout,
+          icon: Icons.logout,
+          onPress: () {
+            Shared.prefClear();
+            navigateToReplacement(context, LoginPage());
+            // Navigator.pushReplacementNamed(context, Routes.loginPage);
+          },
+        ),
+      ],
     );
   }
 }

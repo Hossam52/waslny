@@ -5,7 +5,10 @@ import 'package:user_app/cubit/login_cubit/login_cubit.dart';
 import 'package:user_app/data/models/profile_data_model.dart';
 import 'package:user_app/data/models/user_login.dart';
 import 'package:user_app/utils/color_manager.dart';
+import 'package:user_app/utils/methods.dart';
 import 'package:user_app/utils/value_manager.dart';
+import 'package:user_app/view/pages/edit_profile/editProfileName.dart';
+import 'package:user_app/view/pages/edit_profile/edit_profile_password.dart';
 import 'package:user_app/view/routes/route.dart';
 
 import 'edit_profile_pic.dart';
@@ -72,7 +75,8 @@ class UserProfilePage extends StatelessWidget {
                     ListTileDetails(
                       title: "Username",
                       onTap: () {
-                        Navigator.pushNamed(context, Routes.editProfileName);
+                        navigateTo(context, EditProfileName());
+                        // Navigator.pushNamed(context, Routes.editProfileName);
                       },
                       subTitle: profile.name!,
                     ),
@@ -89,7 +93,8 @@ class UserProfilePage extends StatelessWidget {
                     ListTileDetails(
                       title: "Password",
                       onTap: () {
-                        Navigator.pushNamed(context, Routes.changePassword);
+                        navigateTo(context, EditProfilePassword());
+                        // Navigator.pushNamed(context, Routes.changePassword);
                       },
                       subTitle: "Change Password",
                     ),

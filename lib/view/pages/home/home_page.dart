@@ -1,26 +1,55 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' as widgets;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_zoom_drawer/config.dart';
+import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:user_app/cubit/app_cubit/app_cubit.dart';
+import 'package:user_app/cubit/drivers_cubit/drivers_cubit.dart';
 import 'package:user_app/cubit/google_map/google_map_cubit.dart';
 import 'package:user_app/utils/color_manager.dart';
-import 'package:user_app/utils/const_manager.dart';
 import 'package:user_app/utils/value_manager.dart';
 import 'package:user_app/view/pages/drawer/drawer.dart';
-import 'package:user_app/view/pages/home/current_location_button.dart';
 import 'package:user_app/view/wigdets/bottom_sheet_maps.dart';
-import 'package:user_app/view/wigdets/text_button.dart';
 import '../../../cubit/login_cubit/login_cubit.dart';
 import '../navigation/navigator_builder.dart';
 import '../trip/suggest_service.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({
+  const HomePage({Key? key}) : super(key: key);
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final zoomController = ZoomDrawerController();
+  @override
+  Widget build(BuildContext context) {
+    return ZoomDrawer(
+      menuScreen: const DrawerMenue(),
+      mainScreen: const MainHomePageContent(),
+      controller: zoomController,
+      borderRadius: 24.0,
+      showShadow: true,
+      angle: 0,
+      disableDragGesture: true,
+      mainScreenTapClose: true,
+      androidCloseOnBackTap: true,
+      mainScreenScale: 0.2,
+      style: DrawerStyle.defaultStyle,
+      menuBackgroundColor: Colors.greenAccent.withOpacity(0.6),
+      drawerShadowsBackgroundColor: Colors.white,
+      slideWidth: MediaQuery.of(context).size.width * 0.7,
+    );
+  }
+}
+
+class MainHomePageContent extends StatefulWidget {
+  const MainHomePageContent({
     Key? key,
   }) : super(key: key);
 
@@ -28,10 +57,10 @@ class HomePage extends StatefulWidget {
       CameraPosition(target: LatLng(30.0444, 31.2357), zoom: 14);
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<MainHomePageContent> createState() => _MainHomePageContentState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _MainHomePageContentState extends State<MainHomePageContent> {
   final sheetController = PanelController();
   @override
   void initState() {
@@ -40,91 +69,101 @@ class _HomePageState extends State<HomePage> {
     //     : null;
 
     super.initState();
-
-    BlocProvider.of<GoogleMapCubit>(context).currentUserLocation();
   }
 
   // final EdgeInsets _mappading = const EdgeInsets.only(bottom: 220);
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<GoogleMapCubit, GoogleMapState>(
-      listener: (context, state) async {},
-      listenWhen: (_, state) => state is DirectionDetailsLoaded,
-      builder: (context, state) {
-        AppCubit appCubit = AppCubit.get(context);
-        GoogleMapCubit googleMapCubit = GoogleMapCubit.get(context);
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => GoogleMapCubit()..currentUserLocation(),
+        ),
+        BlocProvider(
+          create: (context) => DriversCubit(),
+        ),
+      ],
+      child: BlocConsumer<GoogleMapCubit, GoogleMapState>(
+        listener: (context, state) async {},
+        listenWhen: (_, state) => state is DirectionDetailsLoaded,
+        builder: (context, state) {
+          AppCubit appCubit = AppCubit.get(context);
+          GoogleMapCubit googleMapCubit = GoogleMapCubit.get(context);
 
-        // String? placeid = cubit.placeid;
-        return BlocConsumer<AppCubit, AppState>(
-          listener: (context, state) {},
-          builder: (context, state) {
-            return Scaffold(
-                drawer: const DrawerMenue(),
-                key: appCubit.scaffoldKey,
-                body: _SliderUpWidget(
-                  sheetController: sheetController,
-                  child: Stack(
-                    children: [
-                      GoogleMap(
-                        // padding: _mappading,
-                        mapType: appCubit.currentMapType,
-                        myLocationButtonEnabled: false,
-                        myLocationEnabled: true,
-                        compassEnabled: false,
-                        zoomControlsEnabled: false,
-                        markers: googleMapCubit.markers,
-                        polylines: googleMapCubit.polylines,
-                        onMapCreated: (GoogleMapController controller) {
-                          googleMapCubit.controller = controller;
-                          //todo call getlocation function here later
-                        },
-                        initialCameraPosition: HomePage._initialMapPosition,
-                      ),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                    vertical: AppPadding.p50,
-                                    horizontal: AppPadding.p10)
-                                .copyWith(bottom: AppPadding.p8),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _drawerIcon(appCubit),
-                                    _backButton(
-                                        appCubit, context, googleMapCubit),
-                                  ],
-                                ),
-                                _searchField(appCubit),
-                                _mapTypeIcon(appCubit, context),
-                              ],
-                            ),
-                          ),
-                          if (googleMapCubit.isDistanceAvailable)
-                            Card(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15)),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                    'Distance: ${googleMapCubit.routeDistance}'),
+          // String? placeid = cubit.placeid;
+          return BlocConsumer<AppCubit, AppState>(
+            listener: (context, state) {},
+            builder: (context, state) {
+              return Scaffold(
+                  // drawer: const DrawerMenue(),
+                  key: appCubit.scaffoldKey,
+                  body: _SliderUpWidget(
+                    sheetController: sheetController,
+                    child: Stack(
+                      children: [
+                        GoogleMap(
+                          // padding: _mappading,
+                          mapType: appCubit.currentMapType,
+                          myLocationButtonEnabled: false,
+                          myLocationEnabled: true,
+                          compassEnabled: false,
+                          zoomControlsEnabled: false,
+                          markers: googleMapCubit.markers,
+                          polylines: googleMapCubit.polylines,
+                          onMapCreated: (GoogleMapController controller) {
+                            googleMapCubit.controller = controller;
+                            //todo call getlocation function here later
+                          },
+                          initialCameraPosition:
+                              MainHomePageContent._initialMapPosition,
+                        ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                      vertical: AppPadding.p50,
+                                      horizontal: AppPadding.p10)
+                                  .copyWith(bottom: AppPadding.p8),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _drawerIcon(appCubit),
+                                      _backButton(
+                                          appCubit, context, googleMapCubit),
+                                    ],
+                                  ),
+                                  _searchField(appCubit),
+                                  _mapTypeIcon(appCubit, context),
+                                ],
                               ),
-                            )
-                        ],
-                      ),
-                    ],
-                  ),
-                ));
-          },
-        );
-      },
+                            ),
+                            if (googleMapCubit.isDistanceAvailable)
+                              Card(
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15)),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                      'Distance: ${googleMapCubit.routeDistance}'),
+                                ),
+                              )
+                          ],
+                        ),
+                      ],
+                    ),
+                  ));
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -213,7 +252,8 @@ class _HomePageState extends State<HomePage> {
                   borderRadius: BorderRadius.circular(40)),
               child: IconButton(
                   onPressed: () {
-                    Scaffold.of(context).openDrawer();
+                    // Scaffold.of(context).openDrawer();
+                    ZoomDrawer.of(context)?.toggle();
                   },
                   icon: const Icon(Icons.menu)),
             );
@@ -270,7 +310,7 @@ class _SliderUpWidgetState extends State<_SliderUpWidget> {
                     setState(() {});
                   },
                   child: Card(
-                    shape: StadiumBorder(),
+                    shape: const StadiumBorder(),
                     child: Container(
                       width: double.infinity,
                       child: Padding(
@@ -283,8 +323,8 @@ class _SliderUpWidgetState extends State<_SliderUpWidget> {
                   ),
                 ),
                 Expanded(
-                  child: SingleChildScrollView(
-                      child: const SuggestServicesBuilder()),
+                  child: const SingleChildScrollView(
+                      child: SuggestServicesBuilder()),
                 ),
               ],
             );
@@ -292,7 +332,7 @@ class _SliderUpWidgetState extends State<_SliderUpWidget> {
           backdropTapClosesPanel: false,
           borderRadius: BorderRadius.circular(AppSize.s20),
           backdropColor: Colors.black12,
-          // minHeight: MediaQuery.of(context).size.height * 0.07,
+          minHeight: MediaQuery.of(context).size.height * 0.2,
           maxHeight: MediaQuery.of(context).size.height * 0.6,
           body: widget.child),
     );

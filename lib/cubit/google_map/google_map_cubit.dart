@@ -47,8 +47,16 @@ class GoogleMapCubit extends Cubit<GoogleMapState> {
     // currentLocation = position;
 
     // getFormattedAddress(currentLocation);
-    getFormattedAddress(position);
-    getNameOfPosition(position);
+    await getFormattedAddress(position);
+    await getNameOfPosition(position);
+
+    await searchPlaceCubit(pickUpController.text);
+    selectedPrediction = predictions?.predictions?[0];
+    if (selectedPrediction != null) {
+      await getDataOfPlace(selectedPrediction!.placeId!);
+      setPickupLocation();
+      changeLastFocused(false);
+    }
   }
 
   currentUserFormattedAddressLocation() async {
@@ -77,7 +85,7 @@ class GoogleMapCubit extends Cubit<GoogleMapState> {
   String? countryName;
   List<Placemark>? placeMark;
 
-  getNameOfPosition(Position position) async {
+  Future getNameOfPosition(Position position) async {
     placeMark = await placemarkFromCoordinates(
         // currentLocation.latitude, currentLocation.longitude);
         position.latitude,
@@ -86,7 +94,7 @@ class GoogleMapCubit extends Cubit<GoogleMapState> {
     emit(GetNameOfPosition());
   }
 
-  getFormattedAddress(Position position) async {
+  Future getFormattedAddress(Position position) async {
     // emit(FormattedAddressLoading());
     Results results = await _googleMapMethod.getFormattedAddress(position);
     pickUpController.text = results.formattedAddress;
@@ -126,6 +134,20 @@ class GoogleMapCubit extends Cubit<GoogleMapState> {
     });
   }
 
+  Future<void> _getDrivers(BuildContext context) async {
+    await DriversCubit.instance(context).getDrivers(
+        pickupLat:
+            locationDetailsPickup!.result!.geometry!.viewport!.northeast!.lat!,
+        pickupLng:
+            locationDetailsPickup!.result!.geometry!.viewport!.northeast!.lng!,
+        dropLat: locationDetailsDestination!
+            .result!.geometry!.viewport!.northeast!.lat!,
+        dropLng: locationDetailsDestination!
+            .result!.geometry!.viewport!.northeast!.lng!,
+        duration: routeDirections!.durationValue.toDouble(),
+        distance: routeDirections!.distanceValue.toDouble());
+  }
+
   List<LatLng> polyLineCoordinate = [];
   Set<Polyline> polylines = {};
 
@@ -150,54 +172,43 @@ class GoogleMapCubit extends Cubit<GoogleMapState> {
     markers.clear();
     routeDirections = null;
 
-    await _googleMapMethod
-        .getDirectionDetails(pickLatLng, dropLatLng)
-        .then((value) async {
-      routeDirections = value;
-      await DriversCubit.instance(context).getDrivers(
-          pickupLat: locationDetailsPickup!
-              .result!.geometry!.viewport!.northeast!.lat!,
-          pickupLng: locationDetailsPickup!
-              .result!.geometry!.viewport!.northeast!.lng!,
-          dropLat: locationDetailsDestination!
-              .result!.geometry!.viewport!.northeast!.lat!,
-          dropLng: locationDetailsDestination!
-              .result!.geometry!.viewport!.northeast!.lng!,
-          duration: routeDirections!.durationValue.toDouble(),
-          distance: routeDirections!.distanceValue.toDouble());
-      emit(DirectionDetailsLoaded(directionDetails: value));
-      addPickupToMarkers();
-      addDistnationToMarkers();
-      PolylinePoints polylinePoints = PolylinePoints();
-      List<PointLatLng> results =
-          polylinePoints.decodePolyline(value.edcodedPPoint);
+    final directionsResponse =
+        await _googleMapMethod.getDirectionDetails(pickLatLng, dropLatLng);
 
-      polyLineCoordinate.clear();
-      if (results.isNotEmpty) {
-        for (var pointLatLng in results) {
-          polyLineCoordinate
-              .add(LatLng(pointLatLng.latitude, pointLatLng.longitude));
-        }
+    routeDirections = directionsResponse;
+    _getDrivers(context);
+    emit(DirectionDetailsLoaded(directionDetails: directionsResponse));
+    addPickupToMarkers();
+    addDistnationToMarkers();
+    PolylinePoints polylinePoints = PolylinePoints();
+    List<PointLatLng> results =
+        polylinePoints.decodePolyline(directionsResponse.edcodedPPoint);
+
+    polyLineCoordinate.clear();
+    if (results.isNotEmpty) {
+      for (var pointLatLng in results) {
+        polyLineCoordinate
+            .add(LatLng(pointLatLng.latitude, pointLatLng.longitude));
       }
+    }
 
-      polylines.clear();
-      Polyline polyline = Polyline(
-        polylineId: const PolylineId('polylineId'),
-        color: Theme.of(context).primaryColor,
-        points: polyLineCoordinate,
-        jointType: JointType.round,
-        width: 4,
-        startCap: Cap.roundCap,
-        endCap: Cap.roundCap,
-        geodesic: true,
-      );
-      polylines.add(polyline);
+    polylines.clear();
+    Polyline polyline = Polyline(
+      polylineId: const PolylineId('polylineId'),
+      color: Theme.of(context).primaryColor,
+      points: polyLineCoordinate,
+      jointType: JointType.round,
+      width: 4,
+      startCap: Cap.roundCap,
+      endCap: Cap.roundCap,
+      geodesic: true,
+    );
+    polylines.add(polyline);
 
-      // fit polyline in the map scope
-      fitPolyLineToMapScope(
-          southwest: value.bounds.southwest.toLatLng(),
-          northeast: value.bounds.northeast.toLatLng());
-    });
+    // fit polyline in the map scope
+    fitPolyLineToMapScope(
+        southwest: directionsResponse.bounds.southwest.toLatLng(),
+        northeast: directionsResponse.bounds.northeast.toLatLng());
   }
 
   //fit polyline in the map scope
@@ -239,34 +250,29 @@ class GoogleMapCubit extends Cubit<GoogleMapState> {
   Predictions? get selectedPrediction => _selectedPrediction;
 
   Prediction? predictions;
+  DateTime _lastSearchedTime = DateTime.now();
   Future searchPlaceCubit(String placeName) async {
-    // String url =
-    //     Endpoints.baseUrl + Endpoints.placeAutoComplete + "input=$placeName";
-    //
-    // Response response = await _apiServices.request(
-    //   method: Method.GET,
-    //   url: url,
-    //   params: {
-    //     "key": googleMapApiKey,
-    //     "types": 'geocode',
-    //     "language": 'en',
-    //     "components": 'country:eg',
-    //   },
-    // );
-    // return response.data['predictions'];
-
-    emit(LoadingSearchState());
-    String url = Endpoints.baseUrl +
-        Endpoints.placeAutoComplete +
-        "input=$placeName&key=$googleMapApiKey&sessiontoken=1234567890&component=country:eg";
-    Response response = await DioHelper.getData(url: url);
-    if (response == "failed") {
-      debugPrint("error");
-      emit(ErrorOnSearchSTate());
+    final lastSearchedTimeInMiliSeconds =
+        DateTime.now().difference(_lastSearchedTime).inMilliseconds;
+    _lastSearchedTime = DateTime.now();
+    if (lastSearchedTimeInMiliSeconds <= 500 || state is LoadingSearchState) {
+      return;
     }
-    debugPrint("$response");
-    predictions = Prediction.fromJson(response.data);
-    emit(SuccessPredictionData(prediction: Prediction.fromJson(response.data)));
+    try {
+      emit(LoadingSearchState());
+      String url = Endpoints.baseUrl +
+          Endpoints.placeAutoComplete +
+          "input=$placeName&key=$googleMapApiKey&sessiontoken=1234567890&component=country:eg";
+      Response response = await DioHelper.getData(url: url);
+
+      debugPrint("$response");
+      predictions = Prediction.fromJson(response.data);
+      emit(SuccessPredictionData(
+          prediction: Prediction.fromJson(response.data)));
+    } catch (e) {
+      emit(ErrorOnSearchSTate());
+      rethrow;
+    }
   }
 
   String? detactiedLocationLatData;
@@ -304,6 +310,14 @@ class GoogleMapCubit extends Cubit<GoogleMapState> {
             snippet: locationDetailsDestination?.result!.formattedAddress),
       ),
     );
+  }
+
+  void swapLocations() {
+    detactiedLocation = locationDetailsPickup;
+    final temp = locationDetailsDestination;
+    setDestinationLocation();
+    detactiedLocation = temp;
+    setPickupLocation();
   }
 
   //For get distance between pickup and distnation locations
@@ -358,6 +372,8 @@ class GoogleMapCubit extends Cubit<GoogleMapState> {
   void setPickupLocation() {
     if (detactiedLocation != null) {
       locationDetailsPickup = detactiedLocation;
+      pickUpController.text =
+          locationDetailsPickup?.result?.formattedAddress?.toString() ?? '';
       emit(ChangeSelectedPickupLocation());
     }
   }
@@ -365,6 +381,9 @@ class GoogleMapCubit extends Cubit<GoogleMapState> {
   void setDestinationLocation() {
     if (detactiedLocation != null) {
       locationDetailsDestination = detactiedLocation;
+      destinationController.text =
+          locationDetailsDestination?.result?.formattedAddress?.toString() ??
+              '';
       emit(ChangeSelectedDestinationLocation());
     }
   }

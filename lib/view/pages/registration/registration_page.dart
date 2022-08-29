@@ -5,7 +5,9 @@ import 'package:user_app/cubit/register/register_cubit_cubit.dart';
 import 'package:user_app/utils/assets_manager.dart';
 import 'package:user_app/utils/color_manager.dart';
 import 'package:user_app/utils/const_manager.dart';
+import 'package:user_app/utils/methods.dart';
 import 'package:user_app/utils/value_manager.dart';
+import 'package:user_app/view/pages/login/login_page.dart';
 import 'package:user_app/view/routes/route.dart';
 import 'package:user_app/view/wigdets/text_button.dart';
 import 'package:user_app/view/wigdets/text_feild.dart';
@@ -35,7 +37,8 @@ class RegistrationPage extends StatelessWidget {
             content: Text("successfully sign up"),
             backgroundColor: Colors.green,
           ));
-          Navigator.pushNamed(context, Routes.loginPage);
+          // Navigator.pushNamed(context, Routes.loginPage);
+          navigateTo(context, LoginPage());
         }
 
         state is ErrorRegisterState
@@ -238,7 +241,8 @@ class RegistrationPage extends StatelessWidget {
                     ),
                     TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, Routes.loginPage);
+                          // Navigator.pushNamed(context, Routes.loginPage);
+                          navigateTo(context, LoginPage());
                         },
                         child: Text(
                           ConstentManager.signIn,
